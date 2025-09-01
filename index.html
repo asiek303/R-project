@@ -544,6 +544,7 @@ decided for cleaning, verification and transforming data in R.</p>
 <pre><code>## Warning: pakiet &#39;skimr&#39; został zbudowany w wersji R 4.3.2</code></pre>
 <pre class="r"><code>library(lubridate)
 library(readr)
+library(knitr)
 library(hms)</code></pre>
 <pre><code>## Warning: pakiet &#39;hms&#39; został zbudowany w wersji R 4.3.2</code></pre>
 <pre><code>## 
@@ -1044,10 +1045,10 @@ is.numeric(cyclistic_df$ride_length) </code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre><code>+ day_of_week - the default format is yyyy-mm-dd</code></pre>
 <pre class="r"><code>cyclistic_df$date &lt;- as.Date(cyclistic_df$started_at) 
-cyclistic_df$day_of_week &lt;- wday(tripdata_df$started_at, week_start = 1) 
-cyclistic_df$day_of_week &lt;- format(as.Date(cyclistic_df$date), &quot;%A&quot;)
+cyclistic_df$day_of_week_num &lt;- wday(cyclistic_df$date, week_start = 1)
 days_en &lt;- c(&quot;Monday&quot;, &quot;Tuesday&quot;, &quot;Wednesday&quot;, &quot;Thursday&quot;, &quot;Friday&quot;, &quot;Saturday&quot;, &quot;Sunday&quot;)
-cyclistic_df$day_of_week &lt;- days_en[cyclistic_df$day_of_week]</code></pre>
+cyclistic_df$day_of_week &lt;- days_en[cyclistic_df$day_of_week_num]
+cyclistic_df$day_of_week_num &lt;- NULL</code></pre>
 <pre><code>+ month</code></pre>
 <pre class="r"><code>cyclistic_df$month &lt;- format(as.Date(cyclistic_df$date), &quot;%m&quot;)</code></pre>
 <pre><code>+ day</code></pre>
@@ -1120,9 +1121,16 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <li>Checked properties of completely “cyclistic_df” data frame.</li>
 </ol>
 <pre class="r"><code>head(cyclistic_df)</code></pre>
-<pre><code>## # A tibble: 0 × 16
-## # ℹ 16 variables: rideable_type &lt;chr&gt;, started_at &lt;dttm&gt;, ended_at &lt;dttm&gt;,
-## #   start_station_name &lt;chr&gt;, end_station_name &lt;chr&gt;, member_casual &lt;chr&gt;,
+<pre><code>## # A tibble: 6 × 16
+##   rideable_type started_at          ended_at            start_station_name      
+##   &lt;chr&gt;         &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;                   
+## 1 classic_bike  2022-10-14 17:13:30 2022-10-14 17:19:39 Noble St &amp; Milwaukee Ave
+## 2 electric_bike 2022-10-01 16:29:26 2022-10-01 16:49:06 Damen Ave &amp; Charleston …
+## 3 electric_bike 2022-10-19 18:55:40 2022-10-19 19:03:30 Hoyne Ave &amp; Balmoral Ave
+## 4 electric_bike 2022-10-31 07:52:36 2022-10-31 07:58:49 Rush St &amp; Cedar St      
+## 5 classic_bike  2022-10-13 18:41:03 2022-10-13 19:26:18 900 W Harrison St       
+## 6 electric_bike 2022-10-13 15:53:27 2022-10-13 15:59:17 900 W Harrison St       
+## # ℹ 12 more variables: end_station_name &lt;chr&gt;, member_casual &lt;chr&gt;,
 ## #   ride_length &lt;dbl&gt;, date &lt;date&gt;, day_of_week &lt;chr&gt;, month &lt;chr&gt;, day &lt;chr&gt;,
 ## #   year &lt;chr&gt;, time &lt;time&gt;, hour &lt;int&gt;, season &lt;chr&gt;, time_of_day &lt;chr&gt;</code></pre>
 <pre class="r"><code>colnames(cyclistic_df)</code></pre>
@@ -1133,43 +1141,27 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 ## [13] &quot;time&quot;               &quot;hour&quot;               &quot;season&quot;            
 ## [16] &quot;time_of_day&quot;</code></pre>
 <pre class="r"><code>str(cyclistic_df)</code></pre>
-<pre><code>## tibble [0 × 16] (S3: tbl_df/tbl/data.frame)
-##  $ rideable_type     : chr(0) 
-##  $ started_at        : &#39;POSIXct&#39; num(0) 
-##  - attr(*, &quot;tzone&quot;)= chr &quot;UTC&quot;
-##  $ ended_at          : &#39;POSIXct&#39; num(0) 
-##  - attr(*, &quot;tzone&quot;)= chr &quot;UTC&quot;
-##  $ start_station_name: chr(0) 
-##  $ end_station_name  : chr(0) 
-##  $ member_casual     : chr(0) 
-##  $ ride_length       : num(0) 
-##  $ date              : &#39;Date&#39; num(0) 
-##  $ day_of_week       : chr(0) 
-##  $ month             : chr(0) 
-##  $ day               : chr(0) 
-##  $ year              : chr(0) 
-##  $ time              : &#39;hms&#39; num(0) 
+<pre><code>## tibble [4,290,979 × 16] (S3: tbl_df/tbl/data.frame)
+##  $ rideable_type     : chr [1:4290979] &quot;classic_bike&quot; &quot;electric_bike&quot; &quot;electric_bike&quot; &quot;electric_bike&quot; ...
+##  $ started_at        : POSIXct[1:4290979], format: &quot;2022-10-14 17:13:30&quot; &quot;2022-10-01 16:29:26&quot; ...
+##  $ ended_at          : POSIXct[1:4290979], format: &quot;2022-10-14 17:19:39&quot; &quot;2022-10-01 16:49:06&quot; ...
+##  $ start_station_name: chr [1:4290979] &quot;Noble St &amp; Milwaukee Ave&quot; &quot;Damen Ave &amp; Charleston St&quot; &quot;Hoyne Ave &amp; Balmoral Ave&quot; &quot;Rush St &amp; Cedar St&quot; ...
+##  $ end_station_name  : chr [1:4290979] &quot;Larrabee St &amp; Division St&quot; &quot;Damen Ave &amp; Cullerton St&quot; &quot;Western Ave &amp; Leland Ave&quot; &quot;Orleans St &amp; Chestnut St (NEXT Apts)&quot; ...
+##  $ member_casual     : chr [1:4290979] &quot;member&quot; &quot;casual&quot; &quot;member&quot; &quot;member&quot; ...
+##  $ ride_length       : num [1:4290979] 6.15 19.67 7.83 6.22 45.25 ...
+##  $ date              : Date[1:4290979], format: &quot;2022-10-14&quot; &quot;2022-10-01&quot; ...
+##  $ day_of_week       : chr [1:4290979] &quot;Friday&quot; &quot;Saturday&quot; &quot;Wednesday&quot; &quot;Monday&quot; ...
+##  $ month             : chr [1:4290979] &quot;10&quot; &quot;10&quot; &quot;10&quot; &quot;10&quot; ...
+##  $ day               : chr [1:4290979] &quot;14&quot; &quot;01&quot; &quot;19&quot; &quot;31&quot; ...
+##  $ year              : chr [1:4290979] &quot;2022&quot; &quot;2022&quot; &quot;2022&quot; &quot;2022&quot; ...
+##  $ time              : &#39;hms&#39; num [1:4290979] 17:13:30 16:29:26 18:55:40 07:52:36 ...
 ##   ..- attr(*, &quot;units&quot;)= chr &quot;secs&quot;
-##  $ hour              : int(0) 
-##  $ season            : chr(0) 
-##  $ time_of_day       : chr(0) 
-##  - attr(*, &quot;na.action&quot;)= &#39;omit&#39; Named int [1:5674399] 1 2 3 4 5 6 7 8 9 10 ...
-##   ..- attr(*, &quot;names&quot;)= chr [1:5674399] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; ...</code></pre>
+##  $ hour              : int [1:4290979] 17 16 18 7 18 15 15 17 9 12 ...
+##  $ season            : chr [1:4290979] &quot;Fall&quot; &quot;Fall&quot; &quot;Fall&quot; &quot;Fall&quot; ...
+##  $ time_of_day       : chr [1:4290979] &quot;Afternoon&quot; &quot;Afternoon&quot; &quot;Evening&quot; &quot;Morning&quot; ...
+##  - attr(*, &quot;na.action&quot;)= &#39;omit&#39; Named int [1:1382948] 2848 2849 2850 2851 2852 2854 2856 4359 4360 4361 ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:1382948] &quot;2848&quot; &quot;2849&quot; &quot;2850&quot; &quot;2851&quot; ...</code></pre>
 <pre class="r"><code>skim_without_charts(cyclistic_df)</code></pre>
-<pre><code>## Warning: There were 3 warnings in `dplyr::summarize()`.
-## The first warning was:
-## ℹ In argument: `dplyr::across(tidyselect::any_of(variable_names),
-##   mangled_skimmers$funs)`.
-## ℹ In group 0: .
-## Caused by warning:
-## ! There were 2 warnings in `dplyr::summarize()`.
-## The first warning was:
-## ℹ In argument: `dplyr::across(tidyselect::any_of(variable_names),
-##   mangled_skimmers$funs)`.
-## Caused by warning in `min.default()`:
-## ! brak argumentów w min; zwracanie wartości Inf
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 2 remaining warnings.</code></pre>
 <table>
 <caption>Data summary</caption>
 <tbody>
@@ -1179,7 +1171,7 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 </tr>
 <tr>
 <td align="left">Number of rows</td>
-<td align="left">0</td>
+<td align="left">4290979</td>
 </tr>
 <tr>
 <td align="left">Number of columns</td>
@@ -1240,8 +1232,8 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <th align="left">skim_variable</th>
 <th align="right">n_missing</th>
 <th align="right">complete_rate</th>
-<th align="left">min</th>
-<th align="left">max</th>
+<th align="right">min</th>
+<th align="right">max</th>
 <th align="right">empty</th>
 <th align="right">n_unique</th>
 <th align="right">whitespace</th>
@@ -1251,107 +1243,116 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <tr>
 <td align="left">rideable_type</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">11</td>
+<td align="right">13</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">3</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">start_station_name</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">64</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">1519</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">end_station_name</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">64</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">1541</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">member_casual</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">6</td>
+<td align="right">6</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">2</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">day_of_week</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">6</td>
+<td align="right">9</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">7</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">month</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">2</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">12</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">day</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">2</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">31</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">year</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">4</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">2</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">season</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">6</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">4</td>
 <td align="right">0</td>
 </tr>
 <tr>
 <td align="left">time_of_day</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">5</td>
+<td align="right">9</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">4</td>
 <td align="right">0</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Variable type: Date</strong></p>
 <table>
+<colgroup>
+<col width="17%" />
+<col width="12%" />
+<col width="17%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="11%" />
+</colgroup>
 <thead>
 <tr>
 <th align="left">skim_variable</th>
@@ -1367,23 +1368,23 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <tr>
 <td align="left">date</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">Inf</td>
-<td align="left">-Inf</td>
-<td align="left">NA</td>
-<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">2022-10-01</td>
+<td align="left">2023-09-30</td>
+<td align="left">2023-06-03</td>
+<td align="right">365</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Variable type: difftime</strong></p>
-<table>
+<table style="width:100%;">
 <colgroup>
-<col width="19%" />
+<col width="18%" />
 <col width="13%" />
-<col width="19%" />
-<col width="12%" />
-<col width="13%" />
+<col width="18%" />
 <col width="9%" />
+<col width="14%" />
+<col width="12%" />
 <col width="12%" />
 </colgroup>
 <thead>
@@ -1401,27 +1402,27 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <tr>
 <td align="left">time</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">Inf secs</td>
-<td align="left">-Inf secs</td>
-<td align="left">NA</td>
-<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">0 secs</td>
+<td align="left">86399 secs</td>
+<td align="left">15:25:20</td>
+<td align="right">85759</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Variable type: numeric</strong></p>
 <table style="width:100%;">
 <colgroup>
-<col width="21%" />
-<col width="15%" />
-<col width="21%" />
+<col width="17%" />
+<col width="12%" />
+<col width="17%" />
 <col width="7%" />
-<col width="4%" />
-<col width="4%" />
-<col width="6%" />
-<col width="6%" />
+<col width="7%" />
 <col width="6%" />
 <col width="7%" />
+<col width="7%" />
+<col width="7%" />
+<col width="9%" />
 </colgroup>
 <thead>
 <tr>
@@ -1441,31 +1442,40 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <tr>
 <td align="left">ride_length</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="right">NaN</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right">1</td>
+<td align="right">15.97</td>
+<td align="right">35.51</td>
+<td align="right">0.02</td>
+<td align="right">5.63</td>
+<td align="right">9.83</td>
+<td align="right">17.55</td>
+<td align="right">12136.3</td>
 </tr>
 <tr>
 <td align="left">hour</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="right">NaN</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right">1</td>
+<td align="right">14.08</td>
+<td align="right">4.88</td>
+<td align="right">0.00</td>
+<td align="right">11.00</td>
+<td align="right">15.00</td>
+<td align="right">18.00</td>
+<td align="right">23.0</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Variable type: POSIXct</strong></p>
 <table>
+<colgroup>
+<col width="13%" />
+<col width="9%" />
+<col width="13%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+<col width="8%" />
+</colgroup>
 <thead>
 <tr>
 <th align="left">skim_variable</th>
@@ -1481,52 +1491,59 @@ cyclistic_df$time &lt;- as_hms((cyclistic_df$started_at))</code></pre>
 <tr>
 <td align="left">started_at</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">Inf</td>
-<td align="left">-Inf</td>
-<td align="left">NA</td>
-<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">2022-10-01 00:00:15</td>
+<td align="left">2023-09-30 23:59:57</td>
+<td align="left">2023-06-03 16:23:05</td>
+<td align="right">3753750</td>
 </tr>
 <tr>
 <td align="left">ended_at</td>
 <td align="right">0</td>
-<td align="right">NaN</td>
-<td align="left">Inf</td>
-<td align="left">-Inf</td>
-<td align="left">NA</td>
-<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">2022-10-01 00:02:52</td>
+<td align="left">2023-10-01 18:32:53</td>
+<td align="left">2023-06-03 16:46:01</td>
+<td align="right">3763883</td>
 </tr>
 </tbody>
 </table>
 <pre class="r"><code>summary(cyclistic_df)</code></pre>
-<pre><code>##  rideable_type        started_at     ended_at   start_station_name
-##  Length:0           Min.   :NA    Min.   :NA    Length:0          
-##  Class :character   1st Qu.:NA    1st Qu.:NA    Class :character  
-##  Mode  :character   Median :NA    Median :NA    Mode  :character  
-##                     Mean   :NaN   Mean   :NaN                     
-##                     3rd Qu.:NA    3rd Qu.:NA                      
-##                     Max.   :NA    Max.   :NA                      
-##  end_station_name   member_casual       ride_length       date    
-##  Length:0           Length:0           Min.   : NA   Min.   :NA   
-##  Class :character   Class :character   1st Qu.: NA   1st Qu.:NA   
-##  Mode  :character   Mode  :character   Median : NA   Median :NA   
-##                                        Mean   :NaN   Mean   :NaN  
-##                                        3rd Qu.: NA   3rd Qu.:NA   
-##                                        Max.   : NA   Max.   :NA   
-##  day_of_week           month               day                year          
-##  Length:0           Length:0           Length:0           Length:0          
-##  Class :character   Class :character   Class :character   Class :character  
-##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
-##                                                                             
-##                                                                             
-##                                                                             
-##      time               hour        season          time_of_day       
-##  Length:0          Min.   : NA   Length:0           Length:0          
-##  Class1:hms        1st Qu.: NA   Class :character   Class :character  
-##  Class2:difftime   Median : NA   Mode  :character   Mode  :character  
-##  Mode  :numeric    Mean   :NaN                                        
-##                    3rd Qu.: NA                                        
-##                    Max.   : NA</code></pre>
+<pre><code>##  rideable_type        started_at                    
+##  Length:4290979     Min.   :2022-10-01 00:00:15.00  
+##  Class :character   1st Qu.:2023-02-23 15:26:44.50  
+##  Mode  :character   Median :2023-06-03 16:23:05.00  
+##                     Mean   :2023-05-06 20:46:11.23  
+##                     3rd Qu.:2023-08-01 20:44:07.50  
+##                     Max.   :2023-09-30 23:59:57.00  
+##     ended_at                      start_station_name end_station_name  
+##  Min.   :2022-10-01 00:02:52.00   Length:4290979     Length:4290979    
+##  1st Qu.:2023-02-23 15:36:42.50   Class :character   Class :character  
+##  Median :2023-06-03 16:46:01.00   Mode  :character   Mode  :character  
+##  Mean   :2023-05-06 21:02:09.30                                        
+##  3rd Qu.:2023-08-01 21:02:45.50                                        
+##  Max.   :2023-10-01 18:32:53.00                                        
+##  member_casual       ride_length             date            day_of_week       
+##  Length:4290979     Min.   :    0.017   Min.   :2022-10-01   Length:4290979    
+##  Class :character   1st Qu.:    5.633   1st Qu.:2023-02-23   Class :character  
+##  Mode  :character   Median :    9.833   Median :2023-06-03   Mode  :character  
+##                     Mean   :   15.968   Mean   :2023-05-06                     
+##                     3rd Qu.:   17.550   3rd Qu.:2023-08-01                     
+##                     Max.   :12136.300   Max.   :2023-09-30                     
+##     month               day                year               time         
+##  Length:4290979     Length:4290979     Length:4290979     Length:4290979   
+##  Class :character   Class :character   Class :character   Class1:hms       
+##  Mode  :character   Mode  :character   Mode  :character   Class2:difftime  
+##                                                           Mode  :numeric   
+##                                                                            
+##                                                                            
+##       hour          season          time_of_day       
+##  Min.   : 0.00   Length:4290979     Length:4290979    
+##  1st Qu.:11.00   Class :character   Class :character  
+##  Median :15.00   Mode  :character   Mode  :character  
+##  Mean   :14.08                                        
+##  3rd Qu.:18.00                                        
+##  Max.   :23.00</code></pre>
 </div>
 </div>
 </div>
@@ -1540,16 +1557,19 @@ trends and patterns between the casual and the member users.</p>
 <li>Total rides</li>
 </ul>
 <pre class="r"><code>nrow(cyclistic_df)</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre><code>## [1] 4290979</code></pre>
 <ul>
 <li>Member type</li>
 </ul>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   count(member_casual)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # Groups:   member_casual [0]
-## # ℹ 2 variables: member_casual &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+## # Groups:   member_casual [2]
+##   member_casual       n
+##   &lt;chr&gt;           &lt;int&gt;
+## 1 casual        1548865
+## 2 member        2742114</code></pre>
 <ul>
 <li>Average ride length</li>
 </ul>
@@ -1557,137 +1577,313 @@ trends and patterns between the casual and the member users.</p>
   group_by(member_casual) %&gt;% 
   summarise(average_ride_length = mean(ride_length), median_length = median(ride_length), 
             max_ride_length = max(ride_length), min_ride_length = min(ride_length))</code></pre>
-<pre><code>## Warning: There were 2 warnings in `summarise()`.
-## The first warning was:
-## ℹ In argument: `max_ride_length = max(ride_length)`.
-## Caused by warning in `max()`:
-## ! brak argumentów w max; zwracanie wartości -Inf
-## ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning.</code></pre>
-<pre><code>## # A tibble: 0 × 5
-## # ℹ 5 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;,
-## #   median_length &lt;dbl&gt;, max_ride_length &lt;dbl&gt;, min_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 5
+##   member_casual average_ride_length median_length max_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;         &lt;dbl&gt;           &lt;dbl&gt;
+## 1 casual                       22.8         12.8           12136.
+## 2 member                       12.1          8.62           1498.
+## # ℹ 1 more variable: min_ride_length &lt;dbl&gt;</code></pre>
 <ul>
 <li>Type of bike</li>
 </ul>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(rideable_type) %&gt;% 
   count(rideable_type)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # Groups:   rideable_type [0]
-## # ℹ 2 variables: rideable_type &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 3 × 2
+## # Groups:   rideable_type [3]
+##   rideable_type       n
+##   &lt;chr&gt;           &lt;int&gt;
+## 1 classic_bike  2573959
+## 2 docked_bike     96186
+## 3 electric_bike 1620834</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual, rideable_type) %&gt;% 
   count(rideable_type)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual, rideable_type [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, rideable_type &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 5 × 3
+## # Groups:   member_casual, rideable_type [5]
+##   member_casual rideable_type       n
+##   &lt;chr&gt;         &lt;chr&gt;           &lt;int&gt;
+## 1 casual        classic_bike   834698
+## 2 casual        docked_bike     96186
+## 3 casual        electric_bike  617981
+## 4 member        classic_bike  1739261
+## 5 member        electric_bike 1002853</code></pre>
 <ul>
 <li>Day of the week</li>
 </ul>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(day_of_week) %&gt;% 
   count(day_of_week)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # Groups:   day_of_week [0]
-## # ℹ 2 variables: day_of_week &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 7 × 2
+## # Groups:   day_of_week [7]
+##   day_of_week      n
+##   &lt;chr&gt;        &lt;int&gt;
+## 1 Friday      622829
+## 2 Monday      555925
+## 3 Saturday    677915
+## 4 Sunday      558920
+## 5 Thursday    643295
+## 6 Tuesday     608448
+## 7 Wednesday   623647</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   count(day_of_week)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, day_of_week &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 14 × 3
+## # Groups:   member_casual [2]
+##    member_casual day_of_week      n
+##    &lt;chr&gt;         &lt;chr&gt;        &lt;int&gt;
+##  1 casual        Friday      230947
+##  2 casual        Monday      176484
+##  3 casual        Saturday    323663
+##  4 casual        Sunday      256547
+##  5 casual        Thursday    201629
+##  6 casual        Tuesday     176835
+##  7 casual        Wednesday   182760
+##  8 member        Friday      391882
+##  9 member        Monday      379441
+## 10 member        Saturday    354252
+## 11 member        Sunday      302373
+## 12 member        Thursday    441666
+## 13 member        Tuesday     431613
+## 14 member        Wednesday   440887</code></pre>
 <ul>
 <li>Time of day</li>
 </ul>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(time_of_day) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # Groups:   time_of_day [0]
-## # ℹ 2 variables: time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 4 × 2
+## # Groups:   time_of_day [4]
+##   time_of_day       n
+##   &lt;chr&gt;         &lt;int&gt;
+## 1 Afternoon   1909465
+## 2 Evening      935698
+## 3 Morning     1142757
+## 4 Night        303059</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 8 × 3
+## # Groups:   member_casual [2]
+##   member_casual time_of_day       n
+##   &lt;chr&gt;         &lt;chr&gt;         &lt;int&gt;
+## 1 casual        Afternoon    730677
+## 2 casual        Evening      344873
+## 3 casual        Morning      327329
+## 4 casual        Night        145986
+## 5 member        Afternoon   1178788
+## 6 member        Evening      590825
+## 7 member        Morning      815428
+## 8 member        Night        157073</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Morning&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual time_of_day      n
+##   &lt;chr&gt;         &lt;chr&gt;        &lt;int&gt;
+## 1 casual        Morning     327329
+## 2 member        Morning     815428</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Morning&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   time_of_day       n
+##   &lt;chr&gt;         &lt;int&gt;
+## 1 Morning     1142757</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Afternoon&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual time_of_day       n
+##   &lt;chr&gt;         &lt;chr&gt;         &lt;int&gt;
+## 1 casual        Afternoon    730677
+## 2 member        Afternoon   1178788</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Afternoon&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   time_of_day       n
+##   &lt;chr&gt;         &lt;int&gt;
+## 1 Afternoon   1909465</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Evening&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual time_of_day      n
+##   &lt;chr&gt;         &lt;chr&gt;        &lt;int&gt;
+## 1 casual        Evening     344873
+## 2 member        Evening     590825</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Evening&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   time_of_day      n
+##   &lt;chr&gt;        &lt;int&gt;
+## 1 Evening     935698</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Night&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual time_of_day      n
+##   &lt;chr&gt;         &lt;chr&gt;        &lt;int&gt;
+## 1 casual        Night       145986
+## 2 member        Night       157073</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Night&quot;) %&gt;% 
   count(time_of_day)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: time_of_day &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   time_of_day      n
+##   &lt;chr&gt;        &lt;int&gt;
+## 1 Night       303059</code></pre>
 <hr />
 <p>*Hour</p>
 <pre class="r"><code>cyclistic_df %&gt;% 
   count(hour) %&gt;%
   print(n=24)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: hour &lt;int&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 24 × 2
+##     hour      n
+##    &lt;int&gt;  &lt;int&gt;
+##  1     0  49562
+##  2     1  30897
+##  3     2  17323
+##  4     3   9737
+##  5     4   9637
+##  6     5  34089
+##  7     6 105262
+##  8     7 191937
+##  9     8 240884
+## 10     9 175533
+## 11    10 177928
+## 12    11 217124
+## 13    12 250837
+## 14    13 253258
+## 15    14 259014
+## 16    15 306870
+## 17    16 390746
+## 18    17 448740
+## 19    18 359978
+## 20    19 256332
+## 21    20 178712
+## 22    21 140676
+## 23    22 111298
+## 24    23  74605</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(member_casual) %&gt;% 
   count(hour) %&gt;%
   print(n=48)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, hour &lt;int&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 48 × 3
+## # Groups:   member_casual [2]
+##    member_casual  hour      n
+##    &lt;chr&gt;         &lt;int&gt;  &lt;int&gt;
+##  1 casual            0  25891
+##  2 casual            1  16711
+##  3 casual            2   9571
+##  4 casual            3   4909
+##  5 casual            4   3675
+##  6 casual            5   8092
+##  7 casual            6  22403
+##  8 casual            7  38680
+##  9 casual            8  52619
+## 10 casual            9  52650
+## 11 casual           10  67124
+## 12 casual           11  85761
+## 13 casual           12 101149
+## 14 casual           13 105444
+## 15 casual           14 110026
+## 16 casual           15 121802
+## 17 casual           16 139888
+## 18 casual           17 152368
+## 19 casual           18 128314
+## 20 casual           19  93939
+## 21 casual           20  67223
+## 22 casual           21  55397
+## 23 casual           22  49429
+## 24 casual           23  35800
+## 25 member            0  23671
+## 26 member            1  14186
+## 27 member            2   7752
+## 28 member            3   4828
+## 29 member            4   5962
+## 30 member            5  25997
+## 31 member            6  82859
+## 32 member            7 153257
+## 33 member            8 188265
+## 34 member            9 122883
+## 35 member           10 110804
+## 36 member           11 131363
+## 37 member           12 149688
+## 38 member           13 147814
+## 39 member           14 148988
+## 40 member           15 185068
+## 41 member           16 250858
+## 42 member           17 296372
+## 43 member           18 231664
+## 44 member           19 162393
+## 45 member           20 111489
+## 46 member           21  85279
+## 47 member           22  61869
+## 48 member           23  38805</code></pre>
 <hr />
 <ul>
 <li>Month</li>
 </ul>
 <pre class="r"><code>cyclistic_df %&gt;%
   count(month) </code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: month &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 12 × 2
+##    month      n
+##    &lt;chr&gt;  &lt;int&gt;
+##  1 01    148280
+##  2 02    149552
+##  3 03    200433
+##  4 04    324173
+##  5 05    463187
+##  6 06    534719
+##  7 07    573876
+##  8 08    584821
+##  9 09    506555
+## 10 10    414238
+## 11 11    255752
+## 12 12    135393</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(member_casual) %&gt;% 
   count(month) %&gt;% 
   print(n = 24)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, month &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 24 × 3
+## # Groups:   member_casual [2]
+##    member_casual month      n
+##    &lt;chr&gt;         &lt;chr&gt;  &lt;int&gt;
+##  1 casual        01     29618
+##  2 casual        02     32774
+##  3 casual        03     46786
+##  4 casual        04    110526
+##  5 casual        05    177025
+##  6 casual        06    219778
+##  7 casual        07    245254
+##  8 casual        08    233819
+##  9 casual        09    196938
+## 10 casual        10    151312
+## 11 casual        11     73533
+## 12 casual        12     31502
+## 13 member        01    118662
+## 14 member        02    116778
+## 15 member        03    153647
+## 16 member        04    213647
+## 17 member        05    286162
+## 18 member        06    314941
+## 19 member        07    328622
+## 20 member        08    351002
+## 21 member        09    309617
+## 22 member        10    262926
+## 23 member        11    182219
+## 24 member        12    103891</code></pre>
 <hr />
 <ul>
 <li>Season</li>
@@ -1696,62 +1892,96 @@ trends and patterns between the casual and the member users.</p>
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Spring&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual season      n
+##   &lt;chr&gt;         &lt;chr&gt;   &lt;int&gt;
+## 1 casual        Spring 334337
+## 2 member        Spring 653456</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   filter(season == &quot;Spring&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   season      n
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 Spring 987793</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Summer&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual season      n
+##   &lt;chr&gt;         &lt;chr&gt;   &lt;int&gt;
+## 1 casual        Summer 698851
+## 2 member        Summer 994565</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   filter(season == &quot;Summer&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   season       n
+##   &lt;chr&gt;    &lt;int&gt;
+## 1 Summer 1693416</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Fall&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual season      n
+##   &lt;chr&gt;         &lt;chr&gt;   &lt;int&gt;
+## 1 casual        Fall   421783
+## 2 member        Fall   754762</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   filter(season == &quot;Fall&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   season       n
+##   &lt;chr&gt;    &lt;int&gt;
+## 1 Fall   1176545</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Winter&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 3
+## # Groups:   member_casual [2]
+##   member_casual season      n
+##   &lt;chr&gt;         &lt;chr&gt;   &lt;int&gt;
+## 1 casual        Winter  93894
+## 2 member        Winter 339331</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   filter(season == &quot;Winter&quot;) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   season      n
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 Winter 433225</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(season, member_casual) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   season, member_casual [0]
-## # ℹ 3 variables: season &lt;chr&gt;, member_casual &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 8 × 3
+## # Groups:   season, member_casual [8]
+##   season member_casual      n
+##   &lt;chr&gt;  &lt;chr&gt;          &lt;int&gt;
+## 1 Fall   casual        421783
+## 2 Fall   member        754762
+## 3 Spring casual        334337
+## 4 Spring member        653456
+## 5 Summer casual        698851
+## 6 Summer member        994565
+## 7 Winter casual         93894
+## 8 Winter member        339331</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(season) %&gt;% 
   count(season)</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # Groups:   season [0]
-## # ℹ 2 variables: season &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 4 × 2
+## # Groups:   season [4]
+##   season       n
+##   &lt;chr&gt;    &lt;int&gt;
+## 1 Fall   1176545
+## 2 Spring  987793
+## 3 Summer 1693416
+## 4 Winter  433225</code></pre>
 </div>
 <div id="calculations-by-average-ride-length" class="section level2">
 <h2>Calculations by average ride length</h2>
@@ -1760,15 +1990,18 @@ trends and patterns between the casual and the member users.</p>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                16.0</code></pre>
 <ul>
 <li>Member type</li>
 </ul>
 <pre class="r"><code>cyclistic_df %&gt;%
   group_by(member_casual) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       22.8
+## 2 member                       12.1</code></pre>
 <ul>
 <li>Type of bike</li>
 </ul>
@@ -1777,15 +2010,24 @@ trends and patterns between the casual and the member users.</p>
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;member_casual&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, rideable_type &lt;chr&gt;,
-## #   average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 5 × 3
+## # Groups:   member_casual [2]
+##   member_casual rideable_type average_ride_length
+##   &lt;chr&gt;         &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual        classic_bike                 25.4
+## 2 casual        docked_bike                  51.7
+## 3 casual        electric_bike                14.8
+## 4 member        classic_bike                 13.0
+## 5 member        electric_bike                10.5</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(rideable_type) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: rideable_type &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 3 × 2
+##   rideable_type average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 classic_bike                 17.0
+## 2 docked_bike                  51.7
+## 3 electric_bike                12.1</code></pre>
 <ul>
 <li>Hour</li>
 </ul>
@@ -1795,15 +2037,89 @@ group_by(hour, member_casual) %&gt;%
   print(n=48) </code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;hour&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   hour [0]
-## # ℹ 3 variables: hour &lt;int&gt;, member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 48 × 3
+## # Groups:   hour [24]
+##     hour member_casual average_ride_length
+##    &lt;int&gt; &lt;chr&gt;                       &lt;dbl&gt;
+##  1     0 casual                      20.6 
+##  2     0 member                      11.5 
+##  3     1 casual                      20.5 
+##  4     1 member                      11.8 
+##  5     2 casual                      20.8 
+##  6     2 member                      12.1 
+##  7     3 casual                      19.6 
+##  8     3 member                      12.6 
+##  9     4 casual                      17.3 
+## 10     4 member                      11.8 
+## 11     5 casual                      14.6 
+## 12     5 member                       9.96
+## 13     6 casual                      15.7 
+## 14     6 member                      10.4 
+## 15     7 casual                      14.7 
+## 16     7 member                      10.8 
+## 17     8 casual                      16.7 
+## 18     8 member                      11.0 
+## 19     9 casual                      23.0 
+## 20     9 member                      11.2 
+## 21    10 casual                      26.6 
+## 22    10 member                      12.0 
+## 23    11 casual                      27.3 
+## 24    11 member                      12.2 
+## 25    12 casual                      26.7 
+## 26    12 member                      12.1 
+## 27    13 casual                      26.3 
+## 28    13 member                      12.1 
+## 29    14 casual                      26.3 
+## 30    14 member                      12.5 
+## 31    15 casual                      24.8 
+## 32    15 member                      12.4 
+## 33    16 casual                      22.7 
+## 34    16 member                      12.7 
+## 35    17 casual                      21.5 
+## 36    17 member                      12.9 
+## 37    18 casual                      21.4 
+## 38    18 member                      12.9 
+## 39    19 casual                      21.3 
+## 40    19 member                      12.6 
+## 41    20 casual                      20.6 
+## 42    20 member                      12.3 
+## 43    21 casual                      19.9 
+## 44    21 member                      12.0 
+## 45    22 casual                      20.2 
+## 46    22 member                      12.1 
+## 47    23 casual                      20.1 
+## 48    23 member                      12.0</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(hour) %&gt;% 
   summarise(average_ride_length = mean(ride_length)) %&gt;% 
   print(n=24) </code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: hour &lt;int&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 24 × 2
+##     hour average_ride_length
+##    &lt;int&gt;               &lt;dbl&gt;
+##  1     0                16.3
+##  2     1                16.5
+##  3     2                16.9
+##  4     3                16.2
+##  5     4                13.9
+##  6     5                11.1
+##  7     6                11.6
+##  8     7                11.6
+##  9     8                12.2
+## 10     9                14.7
+## 11    10                17.5
+## 12    11                18.2
+## 13    12                18.0
+## 14    13                18.1
+## 15    14                18.4
+## 16    15                17.3
+## 17    16                16.3
+## 18    17                15.8
+## 19    18                15.9
+## 20    19                15.8
+## 21    20                15.5
+## 22    21                15.1
+## 23    22                15.7
+## 24    23                15.9</code></pre>
 <ul>
 <li>Day of the week</li>
 </ul>
@@ -1812,15 +2128,37 @@ group_by(hour, member_casual) %&gt;%
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;member_casual&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   member_casual [0]
-## # ℹ 3 variables: member_casual &lt;chr&gt;, day_of_week &lt;chr&gt;,
-## #   average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 14 × 3
+## # Groups:   member_casual [2]
+##    member_casual day_of_week average_ride_length
+##    &lt;chr&gt;         &lt;chr&gt;                     &lt;dbl&gt;
+##  1 casual        Friday                     22.2
+##  2 casual        Monday                     22.4
+##  3 casual        Saturday                   25.8
+##  4 casual        Sunday                     26.2
+##  5 casual        Thursday                   20.0
+##  6 casual        Tuesday                    20.2
+##  7 casual        Wednesday                  19.3
+##  8 member        Friday                     12.1
+##  9 member        Monday                     11.5
+## 10 member        Saturday                   13.6
+## 11 member        Sunday                     13.6
+## 12 member        Thursday                   11.6
+## 13 member        Tuesday                    11.6
+## 14 member        Wednesday                  11.6</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(day_of_week) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: day_of_week &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 7 × 2
+##   day_of_week average_ride_length
+##   &lt;chr&gt;                     &lt;dbl&gt;
+## 1 Friday                     15.8
+## 2 Monday                     15.0
+## 3 Saturday                   19.4
+## 4 Sunday                     19.4
+## 5 Thursday                   14.2
+## 6 Tuesday                    14.1
+## 7 Wednesday                  13.8</code></pre>
 <ul>
 <li><p>Time of day</p></li>
 <li><p>Overall</p></li>
@@ -1830,15 +2168,28 @@ group_by(hour, member_casual) %&gt;%
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;time_of_day&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   time_of_day [0]
-## # ℹ 3 variables: time_of_day &lt;chr&gt;, member_casual &lt;chr&gt;,
-## #   average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 8 × 3
+## # Groups:   time_of_day [4]
+##   time_of_day member_casual average_ride_length
+##   &lt;chr&gt;       &lt;chr&gt;                       &lt;dbl&gt;
+## 1 Afternoon   casual                       24.4
+## 2 Afternoon   member                       12.5
+## 3 Evening     casual                       21.0
+## 4 Evening     member                       12.6
+## 5 Morning     casual                       22.2
+## 6 Morning     member                       11.2
+## 7 Night       casual                       20.2
+## 8 Night       member                       12.0</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(time_of_day) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: time_of_day &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 4 × 2
+##   time_of_day average_ride_length
+##   &lt;chr&gt;                     &lt;dbl&gt;
+## 1 Afternoon                  17.1
+## 2 Evening                    15.7
+## 3 Morning                    14.4
+## 4 Night                      15.9</code></pre>
 <ul>
 <li>Morning</li>
 </ul>
@@ -1846,15 +2197,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Morning&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       22.2
+## 2 member                       11.2</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Morning&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                14.4</code></pre>
 <ul>
 <li>Afternoon</li>
 </ul>
@@ -1862,15 +2216,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Afternoon&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       24.4
+## 2 member                       12.5</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Afternoon&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                17.1</code></pre>
 <ul>
 <li>Evening</li>
 </ul>
@@ -1878,15 +2235,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Evening&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       21.0
+## 2 member                       12.6</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Evening&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                15.7</code></pre>
 <ul>
 <li>Night</li>
 </ul>
@@ -1894,15 +2254,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(time_of_day == &quot;Night&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       20.2
+## 2 member                       12.0</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(time_of_day == &quot;Night&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                15.9</code></pre>
 <ul>
 <li>Month</li>
 </ul>
@@ -1912,14 +2275,52 @@ group_by(hour, member_casual) %&gt;%
   print(n=24)  #lets you view entire tibble</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;month&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   month [0]
-## # ℹ 3 variables: month &lt;chr&gt;, member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 24 × 3
+## # Groups:   month [12]
+##    month member_casual average_ride_length
+##    &lt;chr&gt; &lt;chr&gt;                       &lt;dbl&gt;
+##  1 01    casual                       14.9
+##  2 01    member                       10.0
+##  3 02    casual                       17.7
+##  4 02    member                       10.4
+##  5 03    casual                       16.7
+##  6 03    member                       10.2
+##  7 04    casual                       22.6
+##  8 04    member                       11.6
+##  9 05    casual                       24.5
+## 10 05    member                       12.7
+## 11 06    casual                       24.1
+## 12 06    member                       12.9
+## 13 07    casual                       25.2
+## 14 07    member                       13.4
+## 15 08    casual                       24.4
+## 16 08    member                       13.3
+## 17 09    casual                       23.5
+## 18 09    member                       12.7
+## 19 10    casual                       20.5
+## 20 10    member                       11.7
+## 21 11    casual                       17.2
+## 22 11    member                       10.8
+## 23 12    casual                       14.8
+## 24 12    member                       10.2</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(month) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: month &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 12 × 2
+##    month average_ride_length
+##    &lt;chr&gt;               &lt;dbl&gt;
+##  1 01                   11.0
+##  2 02                   12.0
+##  3 03                   11.7
+##  4 04                   15.3
+##  5 05                   17.2
+##  6 06                   17.5
+##  7 07                   18.4
+##  8 08                   17.7
+##  9 09                   16.9
+## 10 10                   14.9
+## 11 11                   12.7
+## 12 12                   11.3</code></pre>
 <ul>
 <li><p>Season</p></li>
 <li><p>Overall</p></li>
@@ -1929,14 +2330,28 @@ group_by(hour, member_casual) %&gt;%
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;season&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 0 × 3
-## # Groups:   season [0]
-## # ℹ 3 variables: season &lt;chr&gt;, member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 8 × 3
+## # Groups:   season [4]
+##   season member_casual average_ride_length
+##   &lt;chr&gt;  &lt;chr&gt;                       &lt;dbl&gt;
+## 1 Fall   casual                       21.3
+## 2 Fall   member                       11.9
+## 3 Spring casual                       22.8
+## 4 Spring member                       11.7
+## 5 Summer casual                       24.6
+## 6 Summer member                       13.2
+## 7 Winter casual                       15.8
+## 8 Winter member                       10.2</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   group_by(season) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: season &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 4 × 2
+##   season average_ride_length
+##   &lt;chr&gt;                &lt;dbl&gt;
+## 1 Fall                  15.3
+## 2 Spring                15.5
+## 3 Summer                17.9
+## 4 Winter                11.4</code></pre>
 <ul>
 <li>Spring</li>
 </ul>
@@ -1944,15 +2359,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Spring&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       22.8
+## 2 member                       11.7</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(season == &quot;Spring&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                15.5</code></pre>
 <ul>
 <li>Summer</li>
 </ul>
@@ -1960,15 +2378,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Summer&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       24.6
+## 2 member                       13.2</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(season == &quot;Summer&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                17.9</code></pre>
 <ul>
 <li>Fall</li>
 </ul>
@@ -1976,15 +2397,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Fall&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       21.3
+## 2 member                       11.9</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(season == &quot;Fall&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                15.3</code></pre>
 <ul>
 <li>Winter</li>
 </ul>
@@ -1992,15 +2416,18 @@ group_by(hour, member_casual) %&gt;%
   group_by(member_casual) %&gt;% 
   filter(season == &quot;Winter&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
-<pre><code>## # A tibble: 0 × 2
-## # ℹ 2 variables: member_casual &lt;chr&gt;, average_ride_length &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   member_casual average_ride_length
+##   &lt;chr&gt;                       &lt;dbl&gt;
+## 1 casual                       15.8
+## 2 member                       10.2</code></pre>
 <pre class="r"><code>cyclistic_df %&gt;% 
   filter(season == &quot;Winter&quot;) %&gt;% 
   summarise(average_ride_length = mean(ride_length))</code></pre>
 <pre><code>## # A tibble: 1 × 1
 ##   average_ride_length
 ##                 &lt;dbl&gt;
-## 1                 NaN</code></pre>
+## 1                11.4</code></pre>
 </div>
 </div>
 <div id="share" class="section level1">

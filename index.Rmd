@@ -98,6 +98,7 @@ library(janitor)
 library(skimr)
 library(lubridate)
 library(readr)
+library(knitr)
 library(hms)
 ```
 
@@ -153,10 +154,10 @@ is.numeric(cyclistic_df$ride_length)
     
 ```{r}
 cyclistic_df$date <- as.Date(cyclistic_df$started_at) 
-cyclistic_df$day_of_week <- wday(tripdata_df$started_at, week_start = 1) 
-cyclistic_df$day_of_week <- format(as.Date(cyclistic_df$date), "%A")
+cyclistic_df$day_of_week_num <- wday(cyclistic_df$date, week_start = 1)
 days_en <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-cyclistic_df$day_of_week <- days_en[cyclistic_df$day_of_week]
+cyclistic_df$day_of_week <- days_en[cyclistic_df$day_of_week_num]
+cyclistic_df$day_of_week_num <- NULL
 ```
     
     + month
