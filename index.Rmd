@@ -1,0 +1,754 @@
+---
+title: "Cyclist Project"
+author: "Joanna Bober"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    theme: united
+  pdf_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Cyclistic Bike Share Case Study is part of the Google Data Analytics Course I have done. In this case I worked as a Junior Data Analyst in the marketing analyst team for a fictional company - Cyclistic, based in Chicago. I followed the steps of the data analysis process: ask, prepare, process, analyze, share, and act.
+
+
+# Scenario
+
+The director of marketing considers the company’s future success depends on maximizing the number of annual memberships. My team wants to understand how casual riders and annual members use Cyclistic bikes differently.
+
+
+# About the company
+
+Cyclistic is a bike-share program that features more than 5,800 bicycles and 600 docking stations. It offers reclining bikes, hand tricycles, and cargo bikes, making bike-share more inclusive to people with disabilities and riders who can’t use a standard two-wheeled bike. 
+Cyclistic was launched in 2016 and throught the years has grown to a fleet of bicycles that are geotracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from one station and returned to any other station in the system anytime. 
+
+Cyclistic’s marketing strategy relied on building general awareness and appealing to broad castomer segments by offering flexible pricing plans: single-ride passes, full-day passes, and annual memberships. 
+Customers who purchase single-ride or full-day passes are referred to as casual riders. Customers who purchase annual memberships are Cyclistic members.
+
+
+# Ask
+
+### Business question:
+
+How do annual members and casual riders use Cyclistic bikes differently?
+
+### Business task
+
+Maximizing the number of annual memberships as key to future growth.
+
+### Stakeholders
+
+Key stakehoders:
+
+* Lily Moreno - the director of marketing who is responsible for the development of campaigns and initiatives to promote the bike-share program;
+* Cyclistic marketing analytics team - a team of data analysts who are responsible for collecting, analyzing, and reporting data that helps guide   Cyclistic marketing strategy;
+* Cyclistic executive team - the notoriously detail-oriented executive team will decide whether to approve the recommended marketing program.
+
+
+# Prepare
+
+### Data source
+
+I used Cyclistic’s historical trip data to analyze and identify trends. The data has been made available by Motivate International Inc. under this [license](https://divvybikes.com/data-license-agreement).
+This is a public data but the data-privacy issues prohibit using riders’ personally identifiable information. This means that I won’t be able to connect pass purchases to credit card numbers to determine if casual riders live in the Cyclistic service area or if they have purchased multiple single passes.
+
+### Data organization
+
+I choosen the most recent year of Cyclistic trip data (from October 2022 to September 2023) and downloaded each files from [divvy-data](https://divvy-tripdata.s3.amazonaws.com/index.html) as a zip Archive file. Then, data have been unzipped and saved as 12 CSV files, there is 1 file for each month. I created a folder on my desktop with 2 subfolders within - one for CSV files and another for XLS files. I used appropriate file-naming conventios for all of them. Next, I moved the downloaded files to the appropriate subfolder. Thanks to that, I have a copy of original data.
+
+This is structured data, organized in rows and columns. Each record represents one trip, and each trip has a unique field that identifies it: ride_id. 
+
+### ROCCC
+
+I used ROCCC in terms of bias and credibility of data source.
+
+* Reliable and original
+This is public data that contains accurate, complete and unbiased info on Cyclistic’s historical bike trips.
+
+* Comprehensive and current
+This data source contain all the data needed to understand the different ways members and casual riders use Cyclistic bikes. The data is from the most relevant 12 months.
+
+* Cited
+This source is publicly available data provided by Cyclistic and the City of Chicago.
+
+
+# Process
+
+In order to answer the key business questions, I have conducted the data analysis process using R and Tableau tool.
+Initially, I wanted to use Microsoft Excel or BigQuery tool to clean, manipulate and analyze the data, but because of memory and processor limitation, I finally decided for cleaning, verification and transforming data in R.
+
+
+### Data cleaning and manipulation
+
+#### R
+
+1. Install and load necessary libraries and packages.
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(skimr)
+library(lubridate)
+library(readr)
+library(hms)
+```
+
+2. Upload csv file for each month into R.
+
+```{r}
+oct22_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202210-divvy-tripdata.csv")
+nov22_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202211-divvy-tripdata.csv")
+dec22_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202212-divvy-tripdata.csv")
+jan23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202301-divvy-tripdata.csv")
+feb23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202302-divvy-tripdata.csv")
+mar23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202303-divvy-tripdata.csv")
+apr23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202304-divvy-tripdata.csv")
+may23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202305-divvy-tripdata.csv")
+jun23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202306-divvy-tripdata.csv")
+jul23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202307-divvy-tripdata.csv")
+aug23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202308-divvy-tripdata.csv")
+sep23_df <- read_csv("C:/Users/Asia/Documents/Project_cyclist/divvy-tripdata/202309-divvy-tripdata.csv")
+```
+
+3. Created one data frame called "tripdata_df" containing 12 months.
+
+```{r}
+tripdata_df <- bind_rows(oct22_df, nov22_df, dec22_df, jan23_df, feb23_df, mar23_df, apr23_df, may23_df, jun23_df, jul23_df, aug23_df, sep23_df)
+```
+
+4. Checked properties of new created data frame.
+
+```{r}
+head(tripdata_df)
+colnames(tripdata_df)
+str(tripdata_df)
+skim_without_charts(tripdata_df)
+summary(tripdata_df)
+```
+
+5. Create a new data frame "cyclistic_df" and added new columns.
+
+```{r}
+cyclistic_df <- tripdata_df
+```
+
+    + ride_length calculated the total ride length for each trip as subtracting the column "started_at" from the column "ended_at"; converted it to numeric and to minutes;
+    
+```{r}
+cyclistic_df$ride_length <- difftime(tripdata_df$ended_at, tripdata_df$started_at, units = "mins")
+cyclistic_df <- cyclistic_df %>% 
+  mutate(ride_length = as.numeric(ride_length))
+is.numeric(cyclistic_df$ride_length) 
+```
+
+    + day_of_week - the default format is yyyy-mm-dd
+    
+```{r}
+cyclistic_df$date <- as.Date(cyclistic_df$started_at) 
+cyclistic_df$day_of_week <- wday(tripdata_df$started_at, week_start = 1) 
+cyclistic_df$day_of_week <- format(as.Date(cyclistic_df$date), "%A")
+days_en <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+cyclistic_df$day_of_week <- days_en[cyclistic_df$day_of_week]
+```
+    
+    + month
+    
+```{r}
+cyclistic_df$month <- format(as.Date(cyclistic_df$date), "%m")
+```
+
+    + day
+    
+```{r}
+cyclistic_df$day <- format(as.Date(cyclistic_df$date), "%d") 
+```
+
+    + year
+    
+```{r}
+cyclistic_df$year <- format(as.Date(cyclistic_df$date), "%Y") 
+```
+
+    + time - formatted as HH:MM:SS
+    
+```{r}
+cyclistic_df$time <- format(as.Date(cyclistic_df$date), "%H:%M:%S")
+cyclistic_df$time <- as_hms((cyclistic_df$started_at))
+```
+    + hour
+    
+```{r}
+cyclistic_df$hour <- hour(cyclistic_df$time)
+```
+    + season
+    
+```{r}
+cyclistic_df <- cyclistic_df %>% mutate(season=
+                                                        case_when(month == "03"~ "Spring",
+                                                                  month == "04"~ "Spring",
+                                                                  month == "05"~ "Spring",
+                                                                  month == "06"~ "Summer",
+                                                                  month == "07"~ "Summer",
+                                                                  month == "08"~ "Summer",
+                                                                  month == "09"~ "Fall",
+                                                                  month == "10"~ "Fall",
+                                                                  month == "11"~ "Fall",
+                                                                  month == "12"~ "Winter",
+                                                                  month == "01"~ "Winter",
+                                                                  month == "02"~ "Winter")
+)
+```
+    + time_of_day
+    
+```{r}
+cyclistic_df <- cyclistic_df %>% mutate(time_of_day=
+                                                        case_when(hour == "0" ~ "Night",
+                                                                  hour == "1" ~ "Night",
+                                                                  hour == "2" ~ "Night",
+                                                                  hour == "3" ~ "Night",
+                                                                  hour == "4" ~ "Night",
+                                                                  hour == "5" ~ "Morning",
+                                                                  hour == "6" ~ "Morning",
+                                                                  hour == "7" ~ "Morning",
+                                                                  hour == "8" ~ "Morning",
+                                                                  hour == "9" ~ "Morning",
+                                                                  hour == "10" ~ "Morning",
+                                                                  hour == "11" ~ "Morning",
+                                                                  hour == "12" ~ "Afternoon",
+                                                                  hour == "13" ~ "Afternoon",
+                                                                  hour == "14" ~ "Afternoon",
+                                                                  hour == "15" ~ "Afternoon",
+                                                                  hour == "16" ~ "Afternoon",
+                                                                  hour == "17" ~ "Afternoon",
+                                                                  hour == "18" ~ "Evening",
+                                                                  hour == "19" ~ "Evening",
+                                                                  hour == "20" ~ "Evening",
+                                                                  hour == "21" ~ "Evening",
+                                                                  hour == "22" ~ "Night",
+                                                                  hour == "23" ~ "Night")
+                                                      
+)
+```
+    
+6. Cleaning process.
+
+    + removing duplicate rows
+    
+```{r}
+cyclistic_df <- distinct(cyclistic_df) 
+```
+
+    + removing rows with NA values (blank rows)
+    
+```{r}
+cyclistic_df <- na.omit(cyclistic_df)
+```
+
+    + removing unnecessary columns (ride_id, start_station_id, end_station_id, start_lat,       start_long, end_lat, end_lng)
+    
+```{r}
+cyclistic_df <- cyclistic_df %>%  
+  select(-c(ride_id, start_station_id,end_station_id,start_lat,start_lng,end_lat,end_lng)) 
+```
+
+    + removing all rows where ride_length is less then or equal to 0
+
+```{r}
+cyclistic_df <- cyclistic_df[!(cyclistic_df$ride_length <=0),]
+```
+
+7. Checked properties of completely “cyclistic_df” data frame.
+
+```{r}
+head(cyclistic_df)
+colnames(cyclistic_df)
+str(cyclistic_df)
+skim_without_charts(cyclistic_df)
+summary(cyclistic_df)
+```
+
+# Analyze
+
+In this phase, I performed calculations and analyzed data to uncover trends and patterns between the casual and the member users.
+
+## Calculations by member type
+
+* Total rides 
+
+```{r}
+nrow(cyclistic_df)
+```
+
+* Member type
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  count(member_casual)
+```
+
+* Average ride length
+
+```{r}
+
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  summarise(average_ride_length = mean(ride_length), median_length = median(ride_length), 
+            max_ride_length = max(ride_length), min_ride_length = min(ride_length))
+```
+
+* Type of bike
+
+```{r}
+cyclistic_df %>%
+  group_by(rideable_type) %>% 
+  count(rideable_type)
+
+cyclistic_df %>% 
+  group_by(member_casual, rideable_type) %>% 
+  count(rideable_type)
+```
+
+* Day of the week
+
+```{r}
+cyclistic_df %>%
+  group_by(day_of_week) %>% 
+  count(day_of_week)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  count(day_of_week)
+```
+
+* Time of day
+
+```{r}
+
+cyclistic_df %>%
+  group_by(time_of_day) %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Morning") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  filter(time_of_day == "Morning") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Afternoon") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  filter(time_of_day == "Afternoon") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Evening") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  filter(time_of_day == "Evening") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Night") %>% 
+  count(time_of_day)
+
+cyclistic_df %>% 
+  filter(time_of_day == "Night") %>% 
+  count(time_of_day)
+```
+
+***
+
+*Hour
+
+```{r}
+cyclistic_df %>% 
+  count(hour) %>%
+  print(n=24)
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  count(hour) %>%
+  print(n=48)
+```
+
+***
+
+* Month
+
+```{r}
+cyclistic_df %>%
+  count(month) 
+
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  count(month) %>% 
+  print(n = 24)
+```
+
+***
+
+* Season
+
+```{r}
+
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  filter(season == "Spring") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  filter(season == "Spring") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  filter(season == "Summer") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  filter(season == "Summer") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  filter(season == "Fall") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  filter(season == "Fall") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  filter(season == "Winter") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  filter(season == "Winter") %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  group_by(season, member_casual) %>% 
+  count(season)
+
+
+cyclistic_df %>%
+  group_by(season) %>% 
+  count(season)
+
+```
+
+## Calculations by average ride length
+
+
+```{r}
+cyclistic_df %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
+* Member type
+
+```{r}
+cyclistic_df %>%
+  group_by(member_casual) %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
+* Type of bike
+
+```{r}
+
+cyclistic_df %>% 
+  group_by(member_casual, rideable_type) %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  group_by(rideable_type) %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+```
+
+* Hour
+
+```{r}
+cyclistic_df %>%
+group_by(hour, member_casual) %>% 
+  summarise(average_ride_length = mean(ride_length)) %>% 
+  print(n=48) 
+
+cyclistic_df %>% 
+  group_by(hour) %>% 
+  summarise(average_ride_length = mean(ride_length)) %>% 
+  print(n=24) 
+```
+
+* Day of the week
+
+```{r}
+
+cyclistic_df %>% 
+  group_by(member_casual, day_of_week) %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  group_by(day_of_week) %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
+* Time of day
+
++ Overall
+
+```{r}
+cyclistic_df %>% 
+  group_by(time_of_day, member_casual) %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  group_by(time_of_day) %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
++ Morning
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Morning") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(time_of_day == "Morning") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+```
+
++ Afternoon
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Afternoon") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(time_of_day == "Afternoon") %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
++ Evening
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Evening") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(time_of_day == "Evening") %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
++ Night
+
+```{r}
+
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(time_of_day == "Night") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(time_of_day == "Night") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+```
+
+* Month
+
+```{r}
+cyclistic_df %>% 
+  group_by(month, member_casual) %>% 
+  summarise(average_ride_length = mean(ride_length)) %>% 
+  print(n=24)  #lets you view entire tibble
+
+cyclistic_df %>% 
+  group_by(month) %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
+* Season
+
++ Overall
+
+```{r}
+cyclistic_df %>% 
+  group_by(season, member_casual) %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  group_by(season) %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
+
++ Spring
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(season == "Spring") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(season == "Spring") %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
++ Summer
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(season == "Summer") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(season == "Summer") %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
++ Fall
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(season == "Fall") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(season == "Fall") %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
++ Winter
+
+```{r}
+cyclistic_df %>% 
+  group_by(member_casual) %>% 
+  filter(season == "Winter") %>% 
+  summarise(average_ride_length = mean(ride_length))
+
+cyclistic_df %>% 
+  filter(season == "Winter") %>% 
+  summarise(average_ride_length = mean(ride_length))
+```
+
+
+# Share
+
+In this phase of data analysis I created visualization in Tableau to convey my data findings more quickly.
+
+----- Rides by User Type -----
+
+
+Members had almost two times more rides than casuals. Their rides reached 2,680,491 ride within year (63,79%) and casuals riders were 1,521,765 (36,21%).
+
+
+----- Rides by Bike Type -----
+
+Classic bike was the most popular bike type 2,533,979, chosen by both casuals and members. The second choice was electric bike in amount of 1,572,909. Docked bike was chosen only by casuals 95,368 times within year.
+
+
+----- Rides by Weekday -----
+
+Saturday was the busiest day of the week with 663,675. Casual riders the most ride on Sunday (251,948). Wednesday was the day of greatest activity for members (431,532, but only slightly different from Thursday (431,524).
+
+
+----- Average Ride Length by Weekday -----
+
+Weekend (Saturday and Sunday) shows the greatest activity of members and casuals. The average journey length on Sunday for a member was 13,90 minutes and for a casual it was 26,68 minutes.
+
+
+----- Rides by Hour -----
+
+Definitely, the busiest hour within a week was 17. Both members and casuals showed the greatest activity afternoon.
+From 6:00 a.m. the number of riders gradually increased and so on until 8:00 a.m. Another increase is noticeable from 14 and with a peak at 17. Early morning hours, such as 3 and 4, were much less active.
+
+
+----- Rides by Month -----
+
+The summer months were the busiest of the year. Taking into account all users, August slightly won over June. Members most often used bicycles in August and casuals were most visible on the street in June. 
+
+
+# Act 
+
+I provided three, data-driven recommendations to the stakeholders (Cyclistic executives and the marketing team) based on my analysis. 
+Main business goal is converting casual riders into riders with annual membership.
+                                                                                                                                                                
+## Key Findings
+                                                                                                                                                                
+* Members ride significantly more often than casual riders.
+  + Annual members completed 2,680,491 rides (63.79%), nearly double the number of casual riders (1,521,765 rides or 36.21%).
+
+* Classic bikes are the most popular for all users.
+  + The Classic bike was the top choice with 2,533,979 rides, used by both members and casuals;
+  + Electric bikes followed with 1,572,909 rides;
+  + Docked bikes were used exclusively by casual riders (95,368 rides), indicating a potential barrier or difference in accessibility.
+                                                                                                                                                                
+* Casual riders prefer weekends, while members ride during the week.
+  + Casual riders are most active on Sundays, aligning with leisure use;
+  + Members ride most often on Wednesdays and Thursdays, suggesting a commuting or routine pattern.
+                                                                                                                                                                
+* Casual riders take longer trips than members.
+  + On Sundays, casuals averaged 26.68 minutes per ride, while members averaged only 13.90 minutes;
+  + Casual users tend to take longer, more leisurely trips -  possibly indicating a tourism or recreational usage pattern.
+                                                                                                                                                                
+* Peak riding time for both groups is 5 PM.
+  + The busiest time of day for all users is 17:00 (5 PM), especially on weekdays.
+                                                                                                                                                                
+* Summer months drive the highest usage.
+  + August had the most rides overall, with members peaking in August and casuals in June.
+  
+
+## Recommendations
+
+
+1. Create special weekend promotions or limited-time offers that encourage casual riders to try membership benefits.
+                                                                                                                                                                
+2. Promote the value of classic bikes through membership benefits.
+* Offer “classic-only” membership discounts or introductory plans for casual users who mostly use classic bikes.
+                                                                                                                                                             
+3. Use peak hour engagement to trigger timely membership offers:
+* Trigger in-app push notifications or emails around 5 PM;
+* Offer "commuter plan" trials for casuals who ride during peak hours.
